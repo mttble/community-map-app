@@ -44,7 +44,6 @@ function MapEvents({ onClick }: MapEventsProps) {
 
 function LocationMarker() {
   const [position, setPosition] = useState<L.LatLng | null>(null);
-  const [initialZoomDone, setInitialZoomDone] = useState(false);
   const map = useMap();
 
   useEffect(() => {
@@ -57,17 +56,12 @@ function LocationMarker() {
 
     map.on('locationfound', (e) => {
       setPosition(e.latlng);
-      // Only fly to location on first find
-      if (!initialZoomDone) {
-        map.flyTo(e.latlng, map.getZoom());
-        setInitialZoomDone(true);
-      }
     });
 
     return () => {
       map.stopLocate();
     };
-  }, [map, initialZoomDone]);
+  }, [map]);
 
   return position === null ? null : (
     <Marker position={position} icon={icon}>
@@ -111,7 +105,6 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
       attributionControl={true}
       zoomControl={true}
     >
-      <LocationMarker />
       {isPendingEvent && <MapEvents onClick={onMapClick} />}
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

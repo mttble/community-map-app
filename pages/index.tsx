@@ -49,10 +49,10 @@ export default function Home() {
         </div>
       )}
 
-      {/* Add Event Button */}
+      {/* Add Event Button - make sure z-index is high enough */}
       <button 
         onClick={() => setShowForm(true)}
-        className="fixed top-4 right-4 z-20 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg"
+        className="fixed top-4 right-4 z-50 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-600"
       >
         Add Event
       </button>
