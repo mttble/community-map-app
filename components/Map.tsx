@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 're
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import 'leaflet-rotate'; // Ensure this is imported
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 const icon = L.icon({
   iconUrl: '/marker.png',
@@ -57,23 +57,64 @@ interface MapProps {
   onMapClick: (lat: number, lng: number) => void;
 }
 
+function LocationMarker() {
+  const [position, setPosition] = useState<L.LatLng | null>(null);
+  const map = useMap();
+
+  useEffect(() => {
+    map.locate({
+      watch: true,           // Keep watching location
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 0,
+    });
+
+    map.on('locationfound', (e) => {
+      setPosition(e.latlng);
+      map.flyTo(e.latlng, map.getZoom());
+    });
+
+    return () => {
+      map.stopLocate();
+    };
+  }, [map]);
+
+  return position === null ? null : (
+    <Marker position={position}>
+      <Popup>You are here!</Popup>
+    </Marker>
+  );
+}
+
 export default function Map({ events, onMapClick }: MapProps) {
-  const bounds = [
-    [-35.0, 138.0],
-    [-34.5, 139.0],
+  const centerPoint = [-34.888, 138.5597];
+  const bounds: L.LatLngBoundsExpression = [
+    [-34.905, 138.54],   // Southwest corner
+    [-34.87, 138.58]     // Northeast corner
   ];
 
   return (
     <MapContainer
-      center={[-34.888, 138.5597]}
-      zoom={20}
-      style={{ height: '100%', width: '100%' }}
+      center={centerPoint}
+      zoom={18}
+      style={{ 
+        height: '100%', 
+        width: '100%', 
+        display: 'block',
+        position: 'absolute'
+      }}
       className="rounded-md shadow-lg"
-      maxZoom={17.5}
+      maxZoom={18}       // Maximum reliable zoom for OpenStreetMap
       minZoom={16}
       maxBounds={bounds}
       maxBoundsViscosity={1.0}
+      dragging={true}
+      doubleClickZoom={false}
+      scrollWheelZoom={true}
+      attributionControl={true}
+      zoomControl={true}
     >
+      <LocationMarker />
       <RotateControl />
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

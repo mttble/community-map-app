@@ -13,7 +13,20 @@ const ParentComponent = () => {
   };
 
   return (
-    <div style={{ height: '100vh' }}>
+    <div style={{ 
+      height: '100dvh',
+      width: '100%',
+      margin: 0,
+      padding: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      overflow: 'hidden'
+    }}>
       <Map events={events} onMapClick={handleMapClick} />
     </div>
   );
