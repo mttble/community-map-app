@@ -83,8 +83,8 @@ const ParentComponent = () => {
               name="type"
               className="block w-full mb-2 p-2 border rounded"
             >
-              <option value="Halloween">Halloween</option>
-              <option value="Garage Sale">Garage Sale</option>
+              <option value="Halloween">Halloween!</option>
+              <option value="Garage Sale">Garage Sale!</option>
             </select>
             <div className="flex justify-end gap-2">
               <button
