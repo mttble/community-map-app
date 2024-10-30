@@ -21,8 +21,8 @@ interface MapEventsProps {
 
 function MapEvents({ onClick }: MapEventsProps) {
   const [mousePosition, setMousePosition] = useState<L.LatLng | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const map = useMapEvents({
+  
+  useMapEvents({
     click: (e) => {
       onClick(e.latlng.lat, e.latlng.lng);
     },
@@ -42,6 +42,13 @@ function MapEvents({ onClick }: MapEventsProps) {
   ) : null;
 }
 
+interface MapProps {
+  events: Event[];
+  onMapClick: (lat: number, lng: number) => void;
+  onRemoveEvent: (index: number) => void;
+  isPendingEvent: boolean;
+}
+
 function LocationMarker() {
   const [position, setPosition] = useState<L.LatLng | null>(null);
   const map = useMap();
@@ -56,6 +63,7 @@ function LocationMarker() {
 
     map.on('locationfound', (e) => {
       setPosition(e.latlng);
+      // Removed the map.flyTo() to stop auto-centering
     });
 
     return () => {
@@ -68,13 +76,6 @@ function LocationMarker() {
       <Popup>You are here!</Popup>
     </Marker>
   );
-}
-
-interface MapProps {
-  events: Event[];
-  onMapClick: (lat: number, lng: number) => void;
-  onRemoveEvent: (index: number) => void;
-  isPendingEvent: boolean;
 }
 
 export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent }: MapProps) {
@@ -95,7 +96,7 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
         position: 'absolute'
       }}
       className="rounded-md shadow-lg"
-      maxZoom={18}       // Maximum reliable zoom for OpenStreetMap
+      maxZoom={18}
       minZoom={16}
       maxBounds={bounds}
       maxBoundsViscosity={1.0}
@@ -131,6 +132,7 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
           </Popup>
         </Marker>
       ))}
+      <LocationMarker />
     </MapContainer>
   );
 }
