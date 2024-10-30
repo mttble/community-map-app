@@ -44,6 +44,7 @@ function MapEvents({ onClick }: MapEventsProps) {
 
 function LocationMarker() {
   const [position, setPosition] = useState<L.LatLng | null>(null);
+  const [initialZoomDone, setInitialZoomDone] = useState(false);
   const map = useMap();
 
   useEffect(() => {
@@ -56,13 +57,17 @@ function LocationMarker() {
 
     map.on('locationfound', (e) => {
       setPosition(e.latlng);
-      map.flyTo(e.latlng, map.getZoom());
+      // Only fly to location on first find
+      if (!initialZoomDone) {
+        map.flyTo(e.latlng, map.getZoom());
+        setInitialZoomDone(true);
+      }
     });
 
     return () => {
       map.stopLocate();
     };
-  }, [map]);
+  }, [map, initialZoomDone]);
 
   return position === null ? null : (
     <Marker position={position} icon={icon}>
