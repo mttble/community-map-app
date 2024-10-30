@@ -20,12 +20,26 @@ interface MapEventsProps {
 }
 
 function MapEvents({ onClick }: MapEventsProps) {
-  useMapEvents({
+  const [mousePosition, setMousePosition] = useState<L.LatLng | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const map = useMapEvents({
     click: (e) => {
       onClick(e.latlng.lat, e.latlng.lng);
     },
+    mousemove: (e) => {
+      setMousePosition(e.latlng);
+    },
   });
-  return null;
+
+  return mousePosition ? (
+    <Marker 
+      position={mousePosition} 
+      icon={icon}
+      opacity={0.5}
+    >
+      <Popup>Click to place event here</Popup>
+    </Marker>
+  ) : null;
 }
 
 function LocationMarker() {
@@ -60,9 +74,11 @@ function LocationMarker() {
 interface MapProps {
   events: Event[];
   onMapClick: (lat: number, lng: number) => void;
+  onRemoveEvent: (index: number) => void;
+  isPendingEvent: boolean;
 }
 
-export default function Map({ events, onMapClick }: MapProps) {
+export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent }: MapProps) {
   const centerPoint: [number, number] = [-34.888, 138.5597];
   const bounds: L.LatLngBoundsExpression = [
     [-34.905, 138.54],   // Southwest corner
@@ -91,11 +107,11 @@ export default function Map({ events, onMapClick }: MapProps) {
       zoomControl={true}
     >
       <LocationMarker />
+      {isPendingEvent && <MapEvents onClick={onMapClick} />}
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      <MapEvents onClick={onMapClick} />
       {events.map((event, index) => (
         <Marker 
           key={index} 
@@ -107,6 +123,12 @@ export default function Map({ events, onMapClick }: MapProps) {
               <h3 className="font-bold">{event.title}</h3>
               <p>{event.description}</p>
               <p className="text-sm text-gray-500">Type: {event.type}</p>
+              <button
+                onClick={() => onRemoveEvent(index)}
+                className="mt-2 px-2 py-1 bg-red-500 text-white rounded text-sm"
+              >
+                Remove Event
+              </button>
             </div>
           </Popup>
         </Marker>
