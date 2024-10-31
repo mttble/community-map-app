@@ -15,6 +15,7 @@ const MapWithNoSSR = dynamic(
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [showNewsletter, setShowNewsletter] = useState(false);
   const [pendingEvent, setPendingEvent] = useState<Omit<Event, 'lat' | 'lng'> | null>(null);
 
   const handleFormSubmit = (formData: FormData) => {
@@ -49,13 +50,21 @@ export default function Home() {
         </div>
       )}
 
-      {/* Add Event Button - make sure z-index is high enough */}
-      <button 
-        onClick={() => setShowForm(true)}
-        className="fixed top-4 right-4 z-50 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-600"
-      >
-        Add Event
-      </button>
+      {/* Buttons Container */}
+      <div className="fixed top-4 right-4 z-50 flex gap-2">
+        <button 
+          onClick={() => setShowNewsletter(true)}
+          className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-green-600"
+        >
+          Newsletter
+        </button>
+        <button 
+          onClick={() => setShowForm(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-600"
+        >
+          Add Event
+        </button>
+      </div>
 
       {/* Map container */}
       <div className="h-[calc(100vh-100px)] w-full relative z-10">
@@ -67,9 +76,62 @@ export default function Home() {
         />
       </div>
 
+      {/* Newsletter Modal */}
+      {showNewsletter && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowNewsletter(false);
+            }
+          }}
+        >
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Community Newsletter</h2>
+              <button 
+                onClick={() => setShowNewsletter(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* PDF/Document Viewer */}
+            <div className="aspect-[8.5/11] w-full bg-gray-50 rounded-lg">
+              <iframe 
+                src="/testdoc.pdf" 
+                className="w-full h-full rounded-lg"
+                title="Community Newsletter"
+              />
+            </div>
+            
+            {/* Optional: Download button */}
+            <div className="mt-4 flex justify-end">
+              <a 
+                href="/testdoc.pdf" 
+                download="community-newsletter.pdf"
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                Download Newsletter
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Event Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowForm(false);
+            }
+          }}
+        >
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">Add New Event</h2>
             <form onSubmit={(e) => {

@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useState, useEffect } from 'react';
@@ -78,6 +78,33 @@ function LocationMarker() {
   );
 }
 
+function CoordinatesDisplay() {
+  const [position, setPosition] = useState<L.LatLng | null>(null);
+  
+  useMapEvents({
+    click: (e) => {
+      setPosition(e.latlng);
+    }
+  });
+
+  if (!position) return (
+    <div className="absolute bottom-2 left-2 bg-white px-2 py-1 rounded-md shadow-md z-[1000]">
+      Click map to get coordinates
+    </div>
+  );
+
+  const coordString = `[${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}]`;
+
+  return (
+    <div 
+      className="absolute bottom-2 left-2 bg-white px-2 py-1 rounded-md shadow-md z-[1000]"
+      style={{ pointerEvents: 'auto' }}
+    >
+      📍 {coordString}
+    </div>
+  );
+}
+
 export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent }: MapProps) {
   const centerPoint: [number, number] = [-34.888, 138.5597];
   const bounds: L.LatLngBoundsExpression = [
@@ -85,10 +112,25 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
     [-34.87, 138.58]     // Northeast corner
   ];
 
+  // Define the boundary coordinates following the roads
+  const boundaryCoords: L.LatLngExpression[] = [
+    [-34.9013, 138.5664], // South Road & Port Road intersection
+    [-34.8884, 138.5700], // South Road & Torrens Road intersection
+    [-34.8767, 138.5508], // Torrens Road & Kilkenny Road intersection
+    [-34.8891, 138.5482], // Kilkenny Road & Port Road intersection
+    [-34.9013, 138.5664], // Back to start to complete the shape
+  ];
+
+  const boundaryStyle = {
+    color: '#dc2626', // red-600
+    weight: 3,
+    opacity: 0.8,
+  };
+
   return (
     <MapContainer
       center={centerPoint}
-      zoom={18}
+      zoom={16}
       style={{ 
         height: '100%', 
         width: '100%', 
@@ -106,6 +148,8 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
       attributionControl={true}
       zoomControl={true}
     >
+      <CoordinatesDisplay />
+      <Polyline positions={boundaryCoords} pathOptions={boundaryStyle} />
       {isPendingEvent && <MapEvents onClick={onMapClick} />}
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
