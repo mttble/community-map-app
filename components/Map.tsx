@@ -15,6 +15,15 @@ const icon = L.icon({
   shadowSize: [41, 41]
 });
 
+const icon2 = L.icon({
+  iconUrl: '/location.png',
+  iconRetinaUrl: '/location.png',
+  iconSize: [64, 64],
+  iconAnchor: [32, 32],
+  popupAnchor: [0, -32],
+  className: 'pulse'
+});
+
 interface MapEventsProps {
   onClick: (lat: number, lng: number) => void;
 }
@@ -72,7 +81,7 @@ function LocationMarker() {
   }, [map]);
 
   return position === null ? null : (
-    <Marker position={position} icon={icon}>
+    <Marker position={position} icon={icon2}>
       <Popup>You are here!</Popup>
     </Marker>
   );
