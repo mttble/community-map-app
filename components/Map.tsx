@@ -127,10 +127,35 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
     opacity: 0.8,
   };
 
+  const [zoom, setZoom] = useState(14.4);
+  const [minZoom, setMinZoom] = useState(14.4);
+
+  useEffect(() => {
+    // Function to update zoom based on screen width
+    const updateZoom = () => {
+      if (window.innerWidth <= 768) { // Mobile breakpoint
+        setZoom(12);  // Much more zoomed out for mobile
+        setMinZoom(12);
+      } else {
+        setZoom(14.4);  // Original zoom for desktop
+        setMinZoom(14.4);
+      }
+    };
+
+    // Set initial zoom
+    updateZoom();
+
+    // Update zoom when window is resized
+    window.addEventListener('resize', updateZoom);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', updateZoom);
+  }, []);
+
   return (
     <MapContainer
       center={centerPoint}
-      zoom={14.4}
+      zoom={zoom}
       style={{ 
         height: '100%', 
         width: '100%', 
@@ -139,7 +164,7 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
       }}
       className="rounded-md shadow-lg"
       maxZoom={18}
-      minZoom={14.4}
+      minZoom={minZoom}
       maxBounds={bounds}
       maxBoundsViscosity={1.0}
       dragging={true}
