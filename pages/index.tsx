@@ -101,11 +101,17 @@ export default function Home() {
             
             {/* PDF/Document Viewer */}
             <div className="aspect-[8.5/11] w-full bg-gray-50 rounded-lg">
-              <iframe 
-                src="/testdoc.pdf" 
+              <object
+                data="/testdoc.pdf"
+                type="application/pdf"
                 className="w-full h-full rounded-lg"
-                title="Community Newsletter"
-              />
+              >
+                <iframe
+                  src={`https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(window.location.origin + '/testdoc.pdf')}`}
+                  className="w-full h-full rounded-lg"
+                  title="Community Newsletter"
+                />
+              </object>
             </div>
             
             {/* Optional: Download button */}
