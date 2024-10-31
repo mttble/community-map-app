@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Event } from '../types';
+import Image from 'next/image';
 
 // Dynamically import the map components with no SSR
 const MapWithNoSSR = dynamic(
@@ -17,6 +18,7 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [showNewsletter, setShowNewsletter] = useState(false);
   const [pendingEvent, setPendingEvent] = useState<Omit<Event, 'lat' | 'lng'> | null>(null);
+  const [showBinCalendar, setShowBinCalendar] = useState(false);
 
   const handleFormSubmit = (formData: FormData) => {
     // Save form data and wait for map click
@@ -50,13 +52,19 @@ export default function Home() {
         </div>
       )}
 
-      {/* Buttons Container */}
+      {/* Updated Buttons Container */}
       <div className="fixed top-4 right-4 z-50 flex gap-2">
         <button 
           onClick={() => setShowNewsletter(true)}
           className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-green-600"
         >
           Newsletter
+        </button>
+        <button 
+          onClick={() => setShowBinCalendar(true)}
+          className="bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-purple-600"
+        >
+          📅 Bin Calendar
         </button>
         <button 
           onClick={() => setShowForm(true)}
@@ -181,6 +189,58 @@ export default function Home() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bin Calendar Modal */}
+      {showBinCalendar && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowBinCalendar(false);
+            }
+          }}
+        >
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Bin Collection Calendar</h2>
+              <button 
+                onClick={() => setShowBinCalendar(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* PDF/Document Viewer */}
+            <div className="aspect-[8.5/11] w-full bg-gray-50 rounded-lg">
+              <object
+                data="/binweek.pdf"
+                type="application/pdf"
+                className="w-full h-full rounded-lg"
+              >
+                <iframe
+                  src={`https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(window.location.origin + '/binweek.pdf')}`}
+                  className="w-full h-full rounded-lg"
+                  title="Bin Collection Calendar"
+                />
+              </object>
+            </div>
+            
+            {/* Download button */}
+            <div className="mt-4 flex justify-end">
+              <a 
+                href="/binweek.pdf" 
+                download="bin-collection-calendar.pdf"
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                Download Calendar
+              </a>
+            </div>
           </div>
         </div>
       )}
