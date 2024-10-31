@@ -130,7 +130,7 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
   return (
     <MapContainer
       center={centerPoint}
-      zoom={16}
+      zoom={14.4}
       style={{ 
         height: '100%', 
         width: '100%', 
@@ -139,7 +139,7 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
       }}
       className="rounded-md shadow-lg"
       maxZoom={18}
-      minZoom={16}
+      minZoom={14.4}
       maxBounds={bounds}
       maxBoundsViscosity={1.0}
       dragging={true}
