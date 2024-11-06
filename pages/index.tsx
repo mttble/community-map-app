@@ -43,6 +43,15 @@ export default function Home() {
     setEvents(newEvents);
   };
 
+  // Add this function to determine current bin color
+  const getCurrentBinColor = () => {
+    const today = new Date();
+    // Starting from a known week (e.g., May 6, 2024 is yellow)
+    const startDate = new Date(2024, 4, 6); // May 6, 2024
+    const weeksDiff = Math.floor((today.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    return weeksDiff % 2 === 0 ? 'yellow' : 'green';
+  };
+
   return (
     <div className="h-screen w-full relative">
       {/* Instructions when pending event */}
@@ -62,7 +71,11 @@ export default function Home() {
         </button>
         <button 
           onClick={() => setShowBinCalendar(true)}
-          className="bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-purple-600"
+          className={`${
+            getCurrentBinColor() === 'yellow' 
+              ? 'bg-yellow-500 hover:bg-yellow-600' 
+              : 'bg-green-500 hover:bg-green-600'
+          } text-white px-4 py-2 rounded-lg shadow-lg`}
         >
           📅 Bin Calendar
         </button>
