@@ -4,26 +4,47 @@ import L from 'leaflet';
 import { useState, useEffect } from 'react';
 import { Event } from '../types';
 
-const icon = L.icon({
-  iconUrl: '/marker.png',
-  iconRetinaUrl: '/markerbig.png',
-  shadowUrl: '/shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  tooltipAnchor: [16, -28],
-  shadowSize: [41, 41]
-});
+// Define multiple icons for different event types
+const icons = {
+  default: L.icon({
+    iconUrl: '/marker.png',
+    iconRetinaUrl: '/markerbig.png',
+    shadowUrl: '/shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    tooltipAnchor: [16, -28],
+    shadowSize: [41, 41]
+  }),
+  halloween: L.icon({
+    iconUrl: '/halloween-marker.png',
+    iconRetinaUrl: '/halloween-marker.png',
+    iconSize: [55, 45],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  garageSale: L.icon({
+    iconUrl: '/garage-sale-marker.png',
+    iconRetinaUrl: '/garage-sale-marker.png',
+    shadowUrl: '/shadow.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+    shadowSize: [41, 41]
+  })
+};
 
-const icon2 = L.icon({
-  iconUrl: '/location.png',
-  iconRetinaUrl: '/location.png',
-  iconSize: [64, 64],
-  iconAnchor: [32, 32],
-  popupAnchor: [0, -32],
-  className: 'pulse'
-});
-
+// Helper function to get the appropriate icon
+const getEventIcon = (eventType?: string) => {
+  switch (eventType?.toLowerCase()) {
+    case 'halloween':
+      return icons.halloween;
+    case 'garage sale':
+      return icons.garageSale;
+    default:
+      return icons.default;
+  }
+};
 
 interface MapEventsProps {
   onClick: (lat: number, lng: number) => void;
@@ -44,7 +65,7 @@ function MapEvents({ onClick }: MapEventsProps) {
   return mousePosition ? (
     <Marker 
       position={mousePosition} 
-      icon={icon}
+      icon={icons.default}
       opacity={0.5}
     >
       <Popup>Click to place event here</Popup>
@@ -82,7 +103,7 @@ function LocationMarker() {
   }, [map]);
 
   return position === null ? null : (
-    <Marker position={position} icon={icon2}>
+    <Marker position={position} icon={icons.default}>
       <Popup>You are here!</Popup>
     </Marker>
   );
@@ -244,7 +265,7 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
         <Marker 
           key={event.id || index}
           position={[event.lat, event.lng]}
-          icon={icon}
+          icon={getEventIcon(event.type)}
         >
           <Popup>
             <div>

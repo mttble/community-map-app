@@ -21,6 +21,7 @@ export default function Home() {
   const [showNewsletter, setShowNewsletter] = useState(false);
   const [showBinCalendar, setShowBinCalendar] = useState(false);
   const [pendingEventData, setPendingEventData] = useState<Partial<Event> | null>(null);
+  const [eventFilter, setEventFilter] = useState<string>('all');
 
   // Fetch events when component mounts
   useEffect(() => {
@@ -131,9 +132,30 @@ export default function Home() {
     }
   };
 
+  // Add this function to filter events
+  const filteredEvents = events.filter(event => {
+    if (eventFilter === 'all') return true;
+    return event.type?.toLowerCase() === eventFilter.toLowerCase();
+  });
+
   return (
     <div className="h-screen w-full relative">
-      {/* Buttons - only show when not placing a marker */}
+      {/* Filter dropdown - positioned at top left */}
+      {!pendingEventData && (
+        <div className="fixed top-4 left-4 z-50">
+          <select
+            value={eventFilter}
+            onChange={(e) => setEventFilter(e.target.value)}
+            className="bg-white border border-gray-300 text-gray-700 px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg"
+          >
+            <option value="all">All Events</option>
+            <option value="halloween">Halloween</option>
+            <option value="garage sale">Garage Sales</option>
+          </select>
+        </div>
+      )}
+
+      {/* Existing buttons - remain at top right */}
       {!pendingEventData && (
         <div className="fixed top-4 right-4 z-50 flex gap-1 sm:gap-2">
           <button 
@@ -186,7 +208,7 @@ export default function Home() {
       {/* Map container */}
       <div className="h-[calc(100vh-100px)] w-full relative z-10">
         <MapWithNoSSR 
-          events={events} 
+          events={filteredEvents} 
           onMapClick={handleMapClick}
           onRemoveEvent={handleRemoveEvent}
           isPendingEvent={!!pendingEventData}
