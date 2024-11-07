@@ -24,6 +24,7 @@ const icon2 = L.icon({
   className: 'pulse'
 });
 
+
 interface MapEventsProps {
   onClick: (lat: number, lng: number) => void;
 }
@@ -111,6 +112,51 @@ function CoordinatesDisplay() {
     >
       📍 {coordString}
     </div>
+  );
+}
+
+function BookExchangeMarker() {
+  const [iconSize, setIconSize] = useState(20);
+  
+  useMapEvents({
+    zoom: (e) => {
+      const zoom = e.target.getZoom();
+      if (zoom <= 13) {
+        setIconSize(32);      // Very zoomed out
+      } else if (zoom <= 14) {
+        setIconSize(28);      // Zoomed out
+      } else if (zoom <= 15) {
+        setIconSize(24);      // Medium-far
+      } else if (zoom <= 16) {
+        setIconSize(20);      // Medium
+      } else if (zoom <= 17) {
+        setIconSize(18);      // Medium-close
+      } else {
+        setIconSize(32);      // Very zoomed in
+      }
+    }
+  });
+
+  const dynamicBookExchangeIcon = L.icon({
+    iconUrl: '/bookexchange.png',
+    iconRetinaUrl: '/bookexchange.png',
+    iconSize: [iconSize, iconSize],
+    iconAnchor: [iconSize/2, iconSize],
+    popupAnchor: [0, -iconSize],
+  });
+
+  return (
+    <Marker 
+      position={[-34.8901, 138.5579]} 
+      icon={dynamicBookExchangeIcon}
+    >
+      <Popup>
+        <div>
+          <h3 className="font-bold">Community Book Exchange</h3>
+          <p>Free book exchange - take a book, leave a book!</p>
+        </div>
+      </Popup>
+    </Marker>
   );
 }
 
@@ -211,6 +257,7 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
         </Marker>
       ))}
       <LocationMarker />
+      <BookExchangeMarker />
     </MapContainer>
   );
 }
