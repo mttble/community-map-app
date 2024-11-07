@@ -140,46 +140,42 @@ export default function Home() {
 
   return (
     <div className="h-screen w-full relative">
-      {/* Filter dropdown - positioned at top left */}
-      {!pendingEventData && (
-        <div className="fixed top-4 left-4 z-50">
-          <select
-            value={eventFilter}
-            onChange={(e) => setEventFilter(e.target.value)}
-            className="bg-white border border-gray-300 text-gray-700 px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg"
-          >
-            <option value="all">All Events</option>
-            <option value="halloween">Halloween</option>
-            <option value="garage sale">Garage Sales</option>
-          </select>
-        </div>
-      )}
-
-      {/* Existing buttons - remain at top right */}
+      {/* Existing buttons - top right */}
       {!pendingEventData && (
         <div className="fixed top-4 right-4 z-50 flex gap-1 sm:gap-2">
           <button 
             onClick={() => setShowForm(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]"
           >
             Add Event
           </button>
           <button 
             onClick={() => setShowNewsletter(true)}
-            className="bg-green-500 text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg hover:bg-green-600"
+            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]"
           >
             Newsletter
           </button>
-          <button 
-            onClick={() => setShowBinCalendar(true)}
-            className={`${
-              getCurrentBinColor() === 'yellow' 
-                ? 'bg-yellow-500 hover:bg-yellow-600' 
-                : 'bg-green-500 hover:bg-green-600'
-            } text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg`}
-          >
-            📅 Bin Calendar
-          </button>
+          <div className="flex flex-col gap-1 sm:gap-2">
+            <button 
+              onClick={() => setShowBinCalendar(true)}
+              className={`${
+                getCurrentBinColor() === 'yellow' 
+                  ? 'bg-yellow-500 hover:bg-yellow-600' 
+                  : 'bg-green-500 hover:bg-green-600'
+              } text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]`}
+            >
+              📅 Bin Calendar
+            </button>
+            <select
+              value={eventFilter}
+              onChange={(e) => setEventFilter(e.target.value)}
+              className="bg-white border border-gray-300 text-gray-700 px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]"
+            >
+              <option value="all">All Events</option>
+              <option value="halloween">Halloween</option>
+              <option value="garage sale">Garage Sales</option>
+            </select>
+          </div>
           <InstallPWA />
         </div>
       )}
