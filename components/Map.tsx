@@ -55,7 +55,7 @@ function MapEvents({ onClick }: MapEventsProps) {
 interface MapProps {
   events: Event[];
   onMapClick: (lat: number, lng: number) => void;
-  onRemoveEvent: (index: number) => void;
+  onRemoveEvent: (id: string) => void;
   isPendingEvent: boolean;
 }
 
@@ -240,9 +240,9 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
         position="bottomright"
         prefix={false}
       />
-      {events.map((event) => (
+      {events.map((event, index) => (
         <Marker 
-          key={event.id}
+          key={event.id || index}
           position={[event.lat, event.lng]}
           icon={icon}
         >

@@ -19,7 +19,6 @@ export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showNewsletter, setShowNewsletter] = useState(false);
-  const [selectedCoordinates, setSelectedCoordinates] = useState<[number, number] | null>(null);
   const [showBinCalendar, setShowBinCalendar] = useState(false);
   const [pendingEventData, setPendingEventData] = useState<Partial<Event> | null>(null);
 
@@ -43,42 +42,12 @@ export default function Home() {
     }
   };
 
-  const handleAddEvent = async (newEvent: Event) => {
-    const { data, error } = await supabase
-      .from('events')
-      .insert([newEvent])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error adding event:', error);
-      return;
-    }
-    
-    if (data) {
-      setEvents(prev => [...prev, data]);
-    }
-    setShowForm(false);
-  };
-
-  const handleRemoveEvent = async (id: string) => {
-    const { error } = await supabase
-      .from('events')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error('Error removing event:', error);
-      return;
-    }
-    
-    setEvents(prev => prev.filter(event => event.id !== id));
-  };
-
   const handleMapClick = async (lat: number, lng: number) => {
-    if (pendingEventData) {
+    if (pendingEventData && pendingEventData.title && pendingEventData.type) {
       const newEvent: Event = {
-        ...pendingEventData,
+        title: pendingEventData.title,
+        description: pendingEventData.description || '',
+        type: pendingEventData.type,
         lat,
         lng,
       };
@@ -119,6 +88,21 @@ export default function Home() {
     setShowForm(false); // Hide the form
   };
 
+  // Add this function to handle event removal
+  const handleRemoveEvent = async (id: string) => {
+    const { error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error removing event:', error);
+      return;
+    }
+    
+    setEvents(prev => prev.filter(event => event.id !== id));
+  };
+
   return (
     <div className="h-screen w-full relative">
       {/* Updated Buttons Container */}
@@ -157,7 +141,7 @@ export default function Home() {
         <MapWithNoSSR 
           events={events} 
           onMapClick={handleMapClick}
-          onRemoveEvent={handleRemoveEvent} 
+          onRemoveEvent={handleRemoveEvent}
           isPendingEvent={!!pendingEventData}
         />
       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Map from './Map';
 import { Event } from '../types';
+import { supabase } from '../lib/supabase-client';
 
 const ParentComponent = () => {
   const [events, setEvents] = useState<Event[]>([
@@ -41,9 +42,18 @@ const ParentComponent = () => {
     }
   };
 
-  const handleRemoveEvent = (index: number) => {
-    const newEvents = events.filter((_, i) => i !== index);
-    setEvents(newEvents);
+  const handleRemoveEvent = async (id: string) => {
+    const { error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error removing event:', error);
+      return;
+    }
+    
+    setEvents(prev => prev.filter(event => event.id !== id));
   };
 
   return (
