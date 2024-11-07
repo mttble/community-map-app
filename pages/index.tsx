@@ -25,6 +25,42 @@ export default function Home() {
   // Fetch events when component mounts
   useEffect(() => {
     fetchEvents();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('events-channel')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',  // Listen to all changes (insert, update, delete)
+          schema: 'public',
+          table: 'events'
+        },
+        (payload) => {
+          console.log('Change received!', payload);
+          switch (payload.eventType) {
+            case 'INSERT':
+              setEvents(current => [...current, payload.new as Event]);
+              break;
+            case 'DELETE':
+              setEvents(current => current.filter(event => event.id !== payload.old.id));
+              break;
+            case 'UPDATE':
+              setEvents(current => 
+                current.map(event => 
+                  event.id === payload.new.id ? payload.new as Event : event
+                )
+              );
+              break;
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchEvents = async () => {
@@ -52,21 +88,16 @@ export default function Home() {
         lng,
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('events')
-        .insert([newEvent])
-        .select()
-        .single();
+        .insert([newEvent]);
       
       if (error) {
         console.error('Error adding event:', error);
         return;
       }
       
-      if (data) {
-        setEvents(prev => [...prev, data]);
-      }
-      setPendingEventData(null); // Clear pending data
+      setPendingEventData(null);
     }
   };
 
@@ -97,10 +128,7 @@ export default function Home() {
     
     if (error) {
       console.error('Error removing event:', error);
-      return;
     }
-    
-    setEvents(prev => prev.filter(event => event.id !== id));
   };
 
   return (
