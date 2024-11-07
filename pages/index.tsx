@@ -174,6 +174,9 @@ export default function Home() {
               <option value="all">All Events</option>
               <option value="halloween">Halloween</option>
               <option value="garage sale">Garage Sales</option>
+              <option value="business">Business</option>
+              <option value="plants">Plants</option>
+              <option value="produce">Produce</option>
             </select>
           </div>
           <InstallPWA />
@@ -299,6 +302,9 @@ export default function Home() {
                 <option value="">Select Event Type</option>
                 <option value="Halloween">Halloween</option>
                 <option value="Garage Sale">Garage Sale</option>
+                <option value="Business">Business</option>
+                <option value="Plants">Plants</option>
+                <option value="Produce">Produce</option>
               </select>
               <div className="flex justify-end gap-2">
                 <button

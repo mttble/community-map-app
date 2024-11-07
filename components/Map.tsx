@@ -31,17 +31,47 @@ const icons = {
     iconAnchor: [16, 32],
     popupAnchor: [0, -32],
     shadowSize: [41, 41]
+  }),
+  business: L.icon({
+    iconUrl: '/business-marker.png',
+    iconRetinaUrl: '/business-marker.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  plants: L.icon({
+    iconUrl: '/plants-marker.png',
+    iconRetinaUrl: '/plants-marker.png',
+    iconSize: [32, 40],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  produce: L.icon({
+    iconUrl: '/produce-marker.png',
+    iconRetinaUrl: '/produce-marker.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
   })
 };
 
 // Helper function to get the appropriate icon
 const getEventIcon = (eventType?: string) => {
+  console.log('Event type received:', eventType);
+  
   switch (eventType?.toLowerCase()) {
     case 'halloween':
       return icons.halloween;
     case 'garage sale':
       return icons.garageSale;
+    case 'business':
+      return icons.business;
+    case 'plants':
+      return icons.plants;
+    case 'produce':
+      return icons.produce;
     default:
+      console.log('Using default icon for type:', eventType);
       return icons.default;
   }
 };
