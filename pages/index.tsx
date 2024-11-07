@@ -4,6 +4,10 @@ import dynamic from 'next/dynamic';
 import { Event } from '../types';
 import InstallPWA from '../components/InstallPWA';
 import { supabase } from '../lib/supabase-client';
+import ProtectedLayout from '../components/ProtectedLayout';
+import SignOut from '../components/SignOut';
+import { useUser } from '@supabase/auth-helpers-react';
+import { getUserRole, canDeleteEvent } from '../lib/auth';
 
 
 // Dynamically import the map components with no SSR
@@ -22,6 +26,8 @@ export default function Home() {
   const [showBinCalendar, setShowBinCalendar] = useState(false);
   const [pendingEventData, setPendingEventData] = useState<Partial<Event> | null>(null);
   const [eventFilter, setEventFilter] = useState<string>('all');
+  const user = useUser();
+  const userRole = getUserRole(user);
 
   // Fetch events when component mounts
   useEffect(() => {
@@ -81,23 +87,31 @@ export default function Home() {
 
   const handleMapClick = async (lat: number, lng: number) => {
     if (pendingEventData && pendingEventData.title && pendingEventData.type) {
+      console.log('Current user:', user);
+      console.log('User ID:', user?.id);
+
       const newEvent: Event = {
         title: pendingEventData.title,
         description: pendingEventData.description || '',
         type: pendingEventData.type,
         lat,
         lng,
+        user_id: user?.id
       };
 
-      const { error } = await supabase
+      console.log('New event data:', newEvent);
+
+      const { error, data } = await supabase
         .from('events')
-        .insert([newEvent]);
+        .insert([newEvent])
+        .select();
       
       if (error) {
         console.error('Error adding event:', error);
         return;
       }
       
+      console.log('Inserted event:', data);
       setPendingEventData(null);
     }
   };
@@ -122,12 +136,21 @@ export default function Home() {
 
   // Add this function to handle event removal
   const handleRemoveEvent = async (id: string) => {
-    const { error } = await supabase
-      .from('events')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
+    try {
+      console.log('Attempting to remove event:', id);
+      
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Supabase error removing event:', error);
+        return;
+      }
+      
+      // Event will be removed from state via real-time subscription
+    } catch (error) {
       console.error('Error removing event:', error);
     }
   };
@@ -138,10 +161,35 @@ export default function Home() {
     return event.type?.toLowerCase() === eventFilter.toLowerCase();
   });
 
+  const createPopupContent = (event: Event) => (
+    <div>
+      <h3 className="font-bold">{event.title}</h3>
+      <p>{event.description}</p>
+      <p className="text-sm text-gray-500">Type: {event.type}</p>
+      
+      {/* Show actions based on role */}
+      {canDeleteEvent(user, event.user_id!) && event.id && (
+        <button 
+          onClick={() => handleRemoveEvent(event.id!)}
+          className="bg-red-500 text-white px-2 py-1 rounded mt-2"
+        >
+          🗑️ {userRole === 'admin' ? 'Admin Remove' : 'Remove'}
+        </button>
+      )}
+
+      {/* Show role-specific messages */}
+      {userRole === 'anonymous' && (
+        <p className="text-sm text-gray-500 mt-2">
+          Sign in with email to add or remove events
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <div className="h-screen w-full relative">
       {/* Existing buttons - top right */}
-      {!pendingEventData && (
+      {!pendingEventData && userRole !== 'guest' && (
         <div className="fixed top-4 right-4 z-50 flex gap-1 sm:gap-2">
           <button 
             onClick={() => setShowForm(true)}
@@ -178,6 +226,41 @@ export default function Home() {
               <option value="plants">Plants</option>
               <option value="produce">Produce</option>
             </select>
+            <div className="mt-[50px]">
+              <SignOut />
+            </div>
+          </div>
+          <InstallPWA />
+        </div>
+      )}
+
+      {/* For guest users, show only the view controls */}
+      {!pendingEventData && userRole === 'guest' && (
+        <div className="fixed top-4 right-4 z-50 flex gap-1 sm:gap-2">
+          <div className="flex flex-col gap-1 sm:gap-2">
+            <button 
+              onClick={() => setShowBinCalendar(true)}
+              className={`${
+                getCurrentBinColor() === 'yellow' 
+                  ? 'bg-yellow-500 hover:bg-yellow-600' 
+                  : 'bg-green-500 hover:bg-green-600'
+              } text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]`}
+            >
+              📅 Bin Calendar
+            </button>
+            <select
+              value={eventFilter}
+              onChange={(e) => setEventFilter(e.target.value)}
+              className="bg-white border border-gray-300 text-gray-700 px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]"
+            >
+              <option value="all">All Events</option>
+              <option value="halloween">Halloween</option>
+              <option value="garage sale">Garage Sales</option>
+              <option value="business">Business</option>
+              <option value="plants">Plants</option>
+              <option value="produce">Produce</option>
+            </select>
+            <SignOut />
           </div>
           <InstallPWA />
         </div>
@@ -211,6 +294,7 @@ export default function Home() {
           onMapClick={handleMapClick}
           onRemoveEvent={handleRemoveEvent}
           isPendingEvent={!!pendingEventData}
+          createPopupContent={createPopupContent}
         />
       </div>
 
@@ -377,6 +461,23 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Optional: Show user role badge */}
+      <div className="fixed top-2 left-2 px-2 py-1 rounded-full text-sm z-50"
+           style={{
+             backgroundColor: {
+               admin: '#ef4444',      // red-500
+               authenticated: '#22c55e', // green-500
+               anonymous: '#f59e0b',   // amber-500
+               guest: '#6b7280'        // gray-500
+             }[userRole]
+           }}>
+        {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
+      </div>
     </div>
   );
+}
+
+Home.getLayout = function getLayout(page: React.ReactElement) {
+  return <ProtectedLayout>{page}</ProtectedLayout>
 }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Map from './Map';
 import { Event } from '../types';
 import { supabase } from '../lib/supabase-client';
+import { useUser } from '@supabase/auth-helpers-react';
 
 const ParentComponent = () => {
   const [events, setEvents] = useState<Event[]>([
@@ -23,6 +24,9 @@ const ParentComponent = () => {
 
   const [showForm, setShowForm] = useState(false);
   const [newEventLocation, setNewEventLocation] = useState<{lat: number, lng: number} | null>(null);
+
+  const user = useUser();
+  const isGuest = user === null;
 
   const handleMapClick = (lat: number, lng: number) => {
     setNewEventLocation({ lat, lng });
@@ -56,6 +60,22 @@ const ParentComponent = () => {
     setEvents(prev => prev.filter(event => event.id !== id));
   };
 
+  const createPopupContent = (event: Event) => (
+    <div>
+      <h3 className="font-bold">{event.title}</h3>
+      <p>{event.description}</p>
+      <p className="text-sm text-gray-500">Type: {event.type}</p>
+      {!isGuest && event.id && (
+        <button 
+          onClick={() => handleRemoveEvent(event.id!)}
+          className="bg-red-500 text-white px-2 py-1 rounded mt-2"
+        >
+          🗑️ Remove
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div>
       <div className="h-[calc(100vh-100px)] w-full relative z-10">
@@ -64,6 +84,7 @@ const ParentComponent = () => {
           onMapClick={handleMapClick}
           onRemoveEvent={handleRemoveEvent}
           isPendingEvent={!!newEventLocation}
+          createPopupContent={createPopupContent}
         />
       </div>
 

@@ -1,8 +1,9 @@
+import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polyline, AttributionControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
 import { useState, useEffect } from 'react';
 import { Event } from '../types';
+import { useUser } from '@supabase/auth-helpers-react';
 
 // Define multiple icons for different event types
 const icons = {
@@ -106,8 +107,10 @@ function MapEvents({ onClick }: MapEventsProps) {
 interface MapProps {
   events: Event[];
   onMapClick: (lat: number, lng: number) => void;
-  onRemoveEvent: (id: string) => void;
+  onRemoveEvent: (id: string) => Promise<void>;
   isPendingEvent: boolean;
+  createPopupContent: (event: Event) => React.ReactNode;
+  children?: React.ReactNode;
 }
 
 function LocationMarker() {
@@ -211,7 +214,15 @@ function BookExchangeMarker() {
   );
 }
 
-export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent }: MapProps) {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export default function Map({ 
+  events, 
+  onMapClick, 
+  onRemoveEvent,  // Used in createPopupContent
+  isPendingEvent, 
+  createPopupContent, 
+  children 
+}: MapProps) {
   const centerPoint: [number, number] = [-34.888, 138.5597];
   const bounds: L.LatLngBoundsExpression = [
     [-34.905, 138.54],   // Southwest corner
@@ -258,6 +269,14 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
     return () => window.removeEventListener('resize', updateZoom);
   }, []);
 
+  const user = useUser();
+  const isAuthenticated = !!user;
+
+  useEffect(() => {
+    console.log('Current user:', user);
+    console.log('Is guest:', isAuthenticated);
+  }, [user, isAuthenticated]);
+
   return (
     <MapContainer
       center={centerPoint}
@@ -298,22 +317,14 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
           icon={getEventIcon(event.type)}
         >
           <Popup>
-            <div>
-              <h3 className="font-bold">{event.title}</h3>
-              <p>{event.description}</p>
-              <p className="text-sm text-gray-500">Type: {event.type}</p>
-              <button
-                onClick={() => onRemoveEvent(event.id!)}
-                className="mt-2 px-2 py-1 bg-red-500 text-white rounded text-sm"
-              >
-                Remove Event
-              </button>
-            </div>
+            {createPopupContent(event)}
           </Popup>
         </Marker>
       ))}
       <LocationMarker />
       <BookExchangeMarker />
+      {children}
     </MapContainer>
   );
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */
