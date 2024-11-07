@@ -1,8 +1,9 @@
 // pages/index.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Event } from '../types';
 import InstallPWA from '../components/InstallPWA';
+import { supabase } from '../lib/supabase-client';
 
 
 // Dynamically import the map components with no SSR
@@ -18,30 +19,86 @@ export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showNewsletter, setShowNewsletter] = useState(false);
-  const [pendingEvent, setPendingEvent] = useState<Omit<Event, 'lat' | 'lng'> | null>(null);
+  const [selectedCoordinates, setSelectedCoordinates] = useState<[number, number] | null>(null);
   const [showBinCalendar, setShowBinCalendar] = useState(false);
+  const [pendingEventData, setPendingEventData] = useState<Partial<Event> | null>(null);
 
-  const handleFormSubmit = (formData: FormData) => {
-    // Save form data and wait for map click
-    setPendingEvent({
-      title: formData.get('title') as string,
-      description: formData.get('description') as string,
-      type: formData.get('type') as string,
-    });
-    setShowForm(false);
-  };
+  // Fetch events when component mounts
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
-  const handleMapClick = (lat: number, lng: number) => {
-    if (pendingEvent) {
-      // Add the event with the clicked location
-      setEvents([...events, { ...pendingEvent, lat, lng }]);
-      setPendingEvent(null);
+  const fetchEvents = async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*');
+    
+    if (error) {
+      console.error('Error fetching events:', error);
+      return;
+    }
+    
+    if (data) {
+      setEvents(data);
     }
   };
 
-  const handleRemoveEvent = (index: number) => {
-    const newEvents = events.filter((_, i) => i !== index);
-    setEvents(newEvents);
+  const handleAddEvent = async (newEvent: Event) => {
+    const { data, error } = await supabase
+      .from('events')
+      .insert([newEvent])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error adding event:', error);
+      return;
+    }
+    
+    if (data) {
+      setEvents(prev => [...prev, data]);
+    }
+    setShowForm(false);
+  };
+
+  const handleRemoveEvent = async (id: string) => {
+    const { error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error removing event:', error);
+      return;
+    }
+    
+    setEvents(prev => prev.filter(event => event.id !== id));
+  };
+
+  const handleMapClick = async (lat: number, lng: number) => {
+    if (pendingEventData) {
+      const newEvent: Event = {
+        ...pendingEventData,
+        lat,
+        lng,
+      };
+
+      const { data, error } = await supabase
+        .from('events')
+        .insert([newEvent])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error adding event:', error);
+        return;
+      }
+      
+      if (data) {
+        setEvents(prev => [...prev, data]);
+      }
+      setPendingEventData(null); // Clear pending data
+    }
   };
 
   // Add this function to determine current bin color
@@ -53,20 +110,22 @@ export default function Home() {
     return weeksDiff % 2 === 0 ? 'yellow' : 'green';
   };
 
+  const handleFormSubmit = (formData: FormData) => {
+    setPendingEventData({
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      type: formData.get('type') as string,
+    });
+    setShowForm(false); // Hide the form
+  };
+
   return (
     <div className="h-screen w-full relative">
-      {/* Instructions when pending event */}
-      {pendingEvent && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-20 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
-          Click on the map to place your event
-        </div>
-      )}
-
       {/* Updated Buttons Container */}
-      <div className="fixed top-4 right-4 z-50 flex gap-2">
+      <div className="fixed top-4 right-4 z-50 flex gap-1 sm:gap-2">
         <button 
           onClick={() => setShowNewsletter(true)}
-          className="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-green-600"
+          className="bg-green-500 text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg hover:bg-green-600"
         >
           Newsletter
         </button>
@@ -76,15 +135,19 @@ export default function Home() {
             getCurrentBinColor() === 'yellow' 
               ? 'bg-yellow-500 hover:bg-yellow-600' 
               : 'bg-green-500 hover:bg-green-600'
-          } text-white px-4 py-2 rounded-lg shadow-lg`}
+          } text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg`}
         >
-          📅 Bin Calendar
+          📅 Bin
         </button>
         <button 
           onClick={() => setShowForm(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-600"
+          className={`${
+            pendingEventData 
+              ? 'bg-yellow-500 hover:bg-yellow-600' 
+              : 'bg-blue-500 hover:bg-blue-600'
+          } text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg`}
         >
-          Add Event
+          {pendingEventData ? 'Click Map' : 'Add'}
         </button>
         <InstallPWA />
       </div>
@@ -95,7 +158,7 @@ export default function Home() {
           events={events} 
           onMapClick={handleMapClick}
           onRemoveEvent={handleRemoveEvent} 
-          isPendingEvent={!!pendingEvent}
+          isPendingEvent={!!pendingEventData}
         />
       </div>
 
@@ -153,11 +216,11 @@ export default function Home() {
 
       {/* Event Form Modal */}
       {showForm && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30"
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowForm(false);
+              setPendingEventData(null); // Clear pending data if form is closed
             }
           }}
         >

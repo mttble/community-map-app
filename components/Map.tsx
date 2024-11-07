@@ -240,9 +240,9 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
         position="bottomright"
         prefix={false}
       />
-      {events.map((event, index) => (
+      {events.map((event) => (
         <Marker 
-          key={index} 
+          key={event.id}
           position={[event.lat, event.lng]}
           icon={icon}
         >
@@ -252,7 +252,7 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
               <p>{event.description}</p>
               <p className="text-sm text-gray-500">Type: {event.type}</p>
               <button
-                onClick={() => onRemoveEvent(index)}
+                onClick={() => onRemoveEvent(event.id!)}
                 className="mt-2 px-2 py-1 bg-red-500 text-white rounded text-sm"
               >
                 Remove Event

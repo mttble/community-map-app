@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@shadcn/ui": "^0.0.4",
+    "@supabase/supabase-js": "^2.46.1",
     "leaflet": "^1.9.4",
     "leaflet-rotate": "^0.2.8",
     "next": "15.0.1",
