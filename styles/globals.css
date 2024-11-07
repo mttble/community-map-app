@@ -18,3 +18,15 @@ body, html {
   height: 100vh !important;
   position: absolute;
 }
+
+.leaflet-control-attribution {
+  font-size: 6px !important;
+  padding: 2px 4px !important;
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  cursor: default !important;
+  pointer-events: none !important;  /* This prevents clicking */
+}
+
+.leaflet-control-attribution a {
+  pointer-events: none !important;  /* This prevents clicking links */
+}

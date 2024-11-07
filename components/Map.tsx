@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polyline, AttributionControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useState, useEffect } from 'react';
@@ -225,15 +225,20 @@ export default function Map({ events, onMapClick, onRemoveEvent, isPendingEvent 
       dragging={true}
       doubleClickZoom={false}
       scrollWheelZoom={true}
-      attributionControl={true}
-      zoomControl={true}
+      attributionControl={false}
+      zoomControl={false}
     >
       <CoordinatesDisplay />
       <Polyline positions={boundaryCoords} pathOptions={boundaryStyle} />
       {isPendingEvent && <MapEvents onClick={onMapClick} />}
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        className="custom-attribution"
+      />
+      <AttributionControl
+        position="bottomright"
+        prefix={false}
       />
       {events.map((event, index) => (
         <Marker 

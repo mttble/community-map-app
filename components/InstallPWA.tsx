@@ -36,7 +36,7 @@ export default function InstallPWA() {
 
   return (
     <button
-      className="bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-purple-600 flex items-center gap-2"
+      className="fixed bottom-4 left-4 z-50 bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-purple-600 flex items-center gap-2"
       onClick={onClick}
     >
       <svg 
