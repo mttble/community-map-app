@@ -86,6 +86,7 @@ export default function Home() {
         >
           Add Event
         </button>
+        <InstallPWA />
       </div>
 
       {/* Map container */}
@@ -258,7 +259,6 @@ export default function Home() {
           </div>
         </div>
       )}
-      <InstallPWA />
     </div>
   );
 }
