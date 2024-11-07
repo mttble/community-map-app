@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react';
 
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export default function InstallPWA() {
   const [supportsPWA, setSupportsPWA] = useState(false);
-  const [promptInstall, setPromptInstall] = useState<any>(null);
+  const [promptInstall, setPromptInstall] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    const handler = (e: any) => {
+    const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();
       setSupportsPWA(true);
       setPromptInstall(e);
     };
-    window.addEventListener('beforeinstallprompt', handler);
 
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener('beforeinstallprompt', handler as EventListener);
+
+    return () => window.removeEventListener('beforeinstallprompt', handler as EventListener);
   }, []);
 
   const onClick = (evt: React.MouseEvent<HTMLButtonElement>) => {
@@ -29,7 +36,7 @@ export default function InstallPWA() {
 
   return (
     <button
-      className="fixed bottom-4 left-4 z-50 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-blue-600 flex items-center gap-2"
+      className="bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-purple-600 flex items-center gap-2"
       onClick={onClick}
     >
       <svg 
@@ -45,7 +52,7 @@ export default function InstallPWA() {
           d="M12 4v16m8-8H4" 
         />
       </svg>
-      Add to Home Screen
+      Install App
     </button>
   );
 } 
