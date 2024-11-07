@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Event } from '../types';
+import InstallPWA from '../components/InstallPWA';
 
 
 // Dynamically import the map components with no SSR
@@ -257,6 +258,7 @@ export default function Home() {
           </div>
         </div>
       )}
+      <InstallPWA />
     </div>
   );
 }
