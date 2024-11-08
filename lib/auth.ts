@@ -2,8 +2,14 @@ import { User } from '@supabase/supabase-js';
 
 export function getUserRole(user: User | null): 'admin' | 'authenticated' | 'anonymous' | 'guest' {
   if (!user) return 'guest';
-  if (user.app_metadata?.is_admin || user.app_metadata?.is_super_admin) return 'admin';
-  if (user.app_metadata?.provider === 'anonymous') return 'anonymous';
+  
+  // Check for admin first (using app_metadata)
+  if (user.app_metadata?.is_admin) return 'admin';
+  
+  // Check for anonymous user
+  if (user.app_metadata?.provider === 'anonymous' || user.is_anonymous) return 'anonymous';
+  
+  // If user is authenticated but not admin or anonymous
   return 'authenticated';
 }
 

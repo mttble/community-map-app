@@ -29,44 +29,61 @@ export default function Home() {
   const user = useUser();
   const userRole = getUserRole(user);
 
+  // Add this useEffect for debugging
+  useEffect(() => {
+    console.log('Current user:', user);
+    console.log('Determined role:', userRole);
+  }, [user, userRole]);
+
   // Fetch events when component mounts
   useEffect(() => {
     fetchEvents();
 
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('events-channel')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',  // Listen to all changes (insert, update, delete)
-          schema: 'public',
-          table: 'events'
-        },
-        (payload) => {
-          console.log('Change received!', payload);
-          switch (payload.eventType) {
-            case 'INSERT':
-              setEvents(current => [...current, payload.new as Event]);
-              break;
-            case 'DELETE':
-              setEvents(current => current.filter(event => event.id !== payload.old.id));
-              break;
-            case 'UPDATE':
-              setEvents(current => 
-                current.map(event => 
-                  event.id === payload.new.id ? payload.new as Event : event
-                )
-              );
-              break;
+    // Add a small delay before setting up the subscription
+    const subscriptionTimeout = setTimeout(() => {
+      const channel = supabase
+        .channel('events-channel')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'events'
+          },
+          (payload) => {
+            console.log('Change received!', payload);
+            switch (payload.eventType) {
+              case 'INSERT':
+                setEvents(current => [...current, payload.new as Event]);
+                break;
+              case 'DELETE':
+                setEvents(current => current.filter(event => event.id !== payload.old.id));
+                break;
+              case 'UPDATE':
+                setEvents(current => 
+                  current.map(event => 
+                    event.id === payload.new.id ? payload.new as Event : event
+                  )
+                );
+                break;
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe((status, error) => {
+          console.log('Subscription status:', status);
+          if (error) {
+            console.error('Subscription error:', error);
+          }
+        });
 
-    // Cleanup subscription on unmount
+      return () => {
+        console.log('Cleaning up subscription');
+        channel.unsubscribe();
+      };
+    }, 1000); // 1 second delay
+
     return () => {
-      supabase.removeChannel(channel);
+      clearTimeout(subscriptionTimeout);
     };
   }, []);
 
