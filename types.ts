@@ -8,7 +8,7 @@ export interface Event {
   user_id?: string;
 }
 
-export type UserRole = 'guest' | 'anonymous' | 'authenticated';
+export type UserRole = 'guest' | 'anonymous' | 'authenticated' | 'admin' | 'moderator';
 
 export interface UserPermissions {
   canCreate: boolean;
@@ -28,6 +28,16 @@ export const ROLE_PERMISSIONS: Record<UserRole, UserPermissions> = {
     canEdit: false
   },
   authenticated: {
+    canCreate: true,
+    canDelete: true,
+    canEdit: true
+  },
+  moderator: {
+    canCreate: true,
+    canDelete: true,
+    canEdit: true
+  },
+  admin: {
     canCreate: true,
     canDelete: true,
     canEdit: true

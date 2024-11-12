@@ -210,13 +210,13 @@ export default function Home() {
         <div className="fixed top-4 right-4 z-50 flex gap-1 sm:gap-2">
           <button 
             onClick={() => setShowForm(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[52px]"
           >
             Add Event
           </button>
           <button 
             onClick={() => setShowNewsletter(true)}
-            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]"
+            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[52px]"
           >
             Newsletter
           </button>
@@ -227,14 +227,17 @@ export default function Home() {
                 getCurrentBinColor() === 'yellow' 
                   ? 'bg-yellow-500 hover:bg-yellow-600' 
                   : 'bg-green-500 hover:bg-green-600'
-              } text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]`}
+              } text-white px-2 py-2 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[52px]`}
             >
-              📅 Bin Calendar
+              <div className="flex flex-col items-center -mt-1">
+                <span>📅 Bin Calendar</span>
+                <span className="text-xs">({getCurrentBinColor().charAt(0).toUpperCase() + getCurrentBinColor().slice(1)} Bin Week)</span>
+              </div>
             </button>
             <select
               value={eventFilter}
               onChange={(e) => setEventFilter(e.target.value)}
-              className="bg-white border border-gray-300 text-gray-700 px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]"
+              className="bg-white border border-gray-300 text-gray-700 px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[52px]"
             >
               <option value="all">All Events</option>
               <option value="halloween">Halloween</option>
@@ -261,14 +264,17 @@ export default function Home() {
                 getCurrentBinColor() === 'yellow' 
                   ? 'bg-yellow-500 hover:bg-yellow-600' 
                   : 'bg-green-500 hover:bg-green-600'
-              } text-white px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]`}
+              } text-white px-2 py-2 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[52px]`}
             >
-              📅 Bin Calendar
+              <div className="flex flex-col items-center -mt-1">
+                <span>📅 Bin Calendar</span>
+                <span className="text-xs">({getCurrentBinColor().charAt(0).toUpperCase() + getCurrentBinColor().slice(1)} Bin Week)</span>
+              </div>
             </button>
             <select
               value={eventFilter}
               onChange={(e) => setEventFilter(e.target.value)}
-              className="bg-white border border-gray-300 text-gray-700 px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[42px]"
+              className="bg-white border border-gray-300 text-gray-700 px-2 py-1 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg shadow-lg h-[52px]"
             >
               <option value="all">All Events</option>
               <option value="halloween">Halloween</option>
@@ -480,10 +486,11 @@ export default function Home() {
       )}
 
       {/* Optional: Show user role badge */}
-      <div className="fixed top-2 left-2 px-2 py-1 rounded-full text-sm z-50"
+      <div className="fixed top-2 left-2 px-2 py-1 rounded-full text-sm z-50 text-white"
            style={{
              backgroundColor: {
                admin: '#ef4444',      // red-500
+               moderator: '#8b5cf6',  // purple-500
                authenticated: '#22c55e', // green-500
                anonymous: '#f59e0b',   // amber-500
                guest: '#6b7280'        // gray-500
