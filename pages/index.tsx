@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase-client';
 import ProtectedLayout from '../components/ProtectedLayout';
 import SignOut from '../components/SignOut';
 import { useUser } from '@supabase/auth-helpers-react';
-import { getUserRole, canDeleteEvent } from '../lib/auth';
+import { getUserRole, canDeleteEvent, canCreateEvent } from '../lib/auth';
 
 
 // Dynamically import the map components with no SSR
@@ -103,10 +103,12 @@ export default function Home() {
   };
 
   const handleMapClick = async (lat: number, lng: number) => {
-    if (pendingEventData && pendingEventData.title && pendingEventData.type) {
-      console.log('Current user:', user);
-      console.log('User ID:', user?.id);
+    if (!canCreateEvent(user)) {
+      console.log('User does not have permission to create events');
+      return;
+    }
 
+    if (pendingEventData && pendingEventData.title && pendingEventData.type) {
       const newEvent: Event = {
         title: pendingEventData.title,
         description: pendingEventData.description || '',
@@ -115,8 +117,6 @@ export default function Home() {
         lng,
         user_id: user?.id
       };
-
-      console.log('New event data:', newEvent);
 
       const { error, data } = await supabase
         .from('events')
@@ -206,7 +206,7 @@ export default function Home() {
   return (
     <div className="h-screen w-full relative">
       {/* Existing buttons - top right */}
-      {!pendingEventData && userRole !== 'guest' && (
+      {!pendingEventData && userRole !== 'guest' && userRole !== 'anonymous' && (
         <div className="fixed top-4 right-4 z-50 flex gap-1 sm:gap-2">
           <button 
             onClick={() => setShowForm(true)}
@@ -251,8 +251,8 @@ export default function Home() {
         </div>
       )}
 
-      {/* For guest users, show only the view controls */}
-      {!pendingEventData && userRole === 'guest' && (
+      {/* For guest and anonymous users, show only the view controls */}
+      {!pendingEventData && (userRole === 'guest' || userRole === 'anonymous') && (
         <div className="fixed top-4 right-4 z-50 flex gap-1 sm:gap-2">
           <div className="flex flex-col gap-1 sm:gap-2">
             <button 

@@ -26,4 +26,18 @@ export function canDeleteEvent(user: User | null, eventUserId: string): boolean 
     default:
       return false;
   }
+}
+
+export function canCreateEvent(user: User | null): boolean {
+  const role = getUserRole(user);
+  switch (role) {
+    case 'admin':
+    case 'authenticated':
+      return true;  // Only admins and authenticated users can create events
+    case 'anonymous':
+    case 'guest':
+      return false;  // Anonymous and guest users cannot create events
+    default:
+      return false;
+  }
 } 
