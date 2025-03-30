@@ -8,7 +8,7 @@ import ProtectedLayout from '../components/ProtectedLayout';
 import SignOut from '../components/SignOut';
 import { useUser } from '@supabase/auth-helpers-react';
 import { getUserRole, canDeleteEvent, canCreateEvent, canEditEvent, AppRole } from '../lib/auth';
-
+import type { ReactNode } from 'react';
 
 // Dynamically import the map components with no SSR
 const MapWithNoSSR = dynamic(
@@ -34,9 +34,26 @@ export default function Home() {
 
   const showAddEventButton = canRoleCreate && (userRole !== 'user' || userEventCount < 3);
 
+  // Original fetchEvents using direct client
+  const fetchEvents = async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching events:', error);
+      return;
+    }
+
+    if (data) {
+      setEvents(data);
+    }
+  };
+
   // Fetch events when component mounts
   useEffect(() => {
-    fetchEvents();
+    fetchEvents(); // Initial load
+
     if (user && userRole === 'user') {
       fetchUserEventCount();
     } else {
@@ -53,23 +70,37 @@ export default function Home() {
           schema: 'public',
           table: 'events'
         },
-        (payload) => {
-          console.log('Change received!', payload);
+        (payload: any) => {
+          console.log('Real-time change received!', payload);
+          // Original real-time update logic
           switch (payload.eventType) {
             case 'INSERT':
-              setEvents(current => [...current, payload.new as Event]);
+              if (payload.new) {
+                setEvents(current => [...current, payload.new as Event]);
+              }
               break;
             case 'DELETE':
-              setEvents(current => current.filter(event => event.id !== payload.old.id));
+              if (payload.old?.id) {
+                setEvents(current => current.filter(event => event.id !== payload.old.id));
+              }
               break;
             case 'UPDATE':
-              setEvents(current => 
-                current.map(event => 
-                  event.id === payload.new.id ? payload.new as Event : event
-                )
-              );
+              if (payload.new?.id) {
+                setEvents(current =>
+                  current.map(event =>
+                    event.id === payload.new.id ? payload.new as Event : event
+                  )
+                );
+              }
               break;
           }
+           // Re-fetch count if user is involved and it's their event
+           if (userRole === 'user') {
+               const changedEventUserId = payload.new?.user_id || payload.old?.user_id;
+               if (changedEventUserId === user?.id) {
+                  fetchUserEventCount();
+               }
+           }
         }
       )
       .subscribe();
@@ -78,22 +109,8 @@ export default function Home() {
     return () => {
       supabase.removeChannel(channel);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, userRole]);
-
-  const fetchEvents = async () => {
-    const { data, error } = await supabase
-      .from('events')
-      .select('*');
-    
-    if (error) {
-      console.error('Error fetching events:', error);
-      return;
-    }
-    
-    if (data) {
-      setEvents(data);
-    }
-  };
 
   const fetchUserEventCount = async () => {
     if (!user) return;
@@ -110,40 +127,42 @@ export default function Home() {
     }
   };
 
+  // Original handleMapClick using direct client
   const handleMapClick = async (lat: number, lng: number) => {
     if (pendingEventData && pendingEventData.title && pendingEventData.type) {
-      console.log('Current user:', user);
-      console.log('User ID:', user?.id);
+      console.log('User ID for new event:', user?.id);
 
-      // Convert empty string date to null before saving
       const eventDateValue = pendingEventData.event_date === '' ? null : pendingEventData.event_date;
-      const addressValue = pendingEventData.address === '' ? null : pendingEventData.address; // Handle optional address
+      const addressValue = pendingEventData.address === '' ? null : pendingEventData.address;
 
-      const newEvent: Event = {
+      // Prepare the object for insertion, matching the Event type
+      const newEventInsertData: Omit<Event, 'id' | 'created_at' | 'updated_at'> = {
         title: pendingEventData.title,
         description: pendingEventData.description,
         type: pendingEventData.type,
         lat,
         lng,
         address: addressValue,
-        user_id: user?.id,
+        user_id: user?.id, // Ensure type compatibility (string | undefined)
         event_date: eventDateValue
       };
 
-      console.log('New event data:', newEvent);
+      console.log('New event data for Supabase insert:', newEventInsertData);
 
       const { error, data } = await supabase
         .from('events')
-        .insert([newEvent])
-        .select();
-      
+        .insert([newEventInsertData]) // Insert the prepared data
+        .select(); // Select to get the inserted row back
+
       if (error) {
         console.error('Error adding event:', error);
+        // TODO: Show error message to user
         return;
       }
-      
+
       console.log('Inserted event:', data);
       setPendingEventData(null);
+      // Real-time subscription should update the list, but we fetch count manually
       if (userRole === 'user') {
         fetchUserEventCount();
       }
@@ -171,21 +190,29 @@ export default function Home() {
     setEditingEvent(null); // Ensure editing state is cleared
   };
 
-  // --- NEW Function to handle UPDATING an existing event ---
+  // Original handleUpdateEvent using direct client
   const handleUpdateEvent = async (formData: FormData) => {
-    if (!editingEvent || !editingEvent.id) return; // Should not happen if form is in edit mode
+    if (!editingEvent || !editingEvent.id) return;
 
-    // Convert empty string date to null before saving
     const eventDateValue = formData.get('event_date') as string;
-    const addressValue = formData.get('address') as string; // Get address
+    const addressValue = formData.get('address') as string;
 
-    const updatedData: Partial<Event> = {
+    // Prepare the fields that can be updated
+    const updatedData: Partial<Omit<Event, 'id' | 'created_at' | 'lat' | 'lng' | 'user_id'>> = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
       type: formData.get('type') as string,
       address: addressValue === '' ? null : addressValue,
-      event_date: eventDateValue === '' ? null : eventDateValue
+      event_date: eventDateValue === '' ? null : eventDateValue,
+      updated_at: new Date().toISOString(), // Explicitly set updated_at
     };
+
+    // Basic validation
+    if (!updatedData.title || !updatedData.type) {
+      console.error("Title and Type are required.");
+      // TODO: Show validation error to user
+      return;
+    }
 
     const { error } = await supabase
       .from('events')
@@ -194,45 +221,52 @@ export default function Home() {
 
     if (error) {
       console.error('Error updating event:', error);
-      // Optionally: show an error message to the user
+      // TODO: Show error message to user
     } else {
       console.log('Event updated successfully');
       // Close the form and clear editing state
       setShowForm(false);
       setEditingEvent(null);
-      // Note: Real-time subscription should update the event list automatically
+      // Real-time subscription should update the list
     }
   };
 
-  // Function to open the form for editing
+  // handleEditClick remains the same (only sets local state)
   const handleEditClick = (event: Event) => {
     setEditingEvent(event);
     setShowForm(true);
     setPendingEventData(null); // Ensure we are not in pending placement mode
   };
 
-  // Add this function to handle event removal
+  // Original handleRemoveEvent using direct client
   const handleRemoveEvent = async (id: string) => {
     const eventToDelete = events.find(event => event.id === id);
     const wasOwnEvent = eventToDelete?.user_id === user?.id;
 
+    // Optional: Add confirmation
+    // if (!confirm('Are you sure you want to remove this event?')) return;
+
     try {
       console.log('Attempting to remove event:', id);
-      
       const { error } = await supabase
         .from('events')
         .delete()
         .eq('id', id);
-      
+
       if (error) {
         console.error('Supabase error removing event:', error);
+        // TODO: Show error message to user
       } else {
+        console.log('Event removed successfully');
+        // Real-time subscription should handle list update
+        // Manually update count if needed
         if (userRole === 'user' && wasOwnEvent) {
           fetchUserEventCount();
         }
       }
     } catch (error) {
       console.error('Error removing event:', error);
+      // TODO: Show error message to user
     }
   };
 
@@ -256,7 +290,7 @@ export default function Home() {
     }
   };
 
-  // --- NEW Helper function to format timestamp --- 
+  // Helper function to format timestamp
   const formatTimestamp = (dateString: string | undefined | null): string => {
     if (!dateString) return ''; // Return empty if no timestamp
     try {
@@ -272,7 +306,7 @@ export default function Home() {
     }
   };
 
-  const createPopupContent = (event: Event): React.ReactNode => (
+  const createPopupContent = (event: Event): ReactNode => (
     <div>
       <h3 className="font-bold">{event.title}</h3>
       {event.event_date && (
