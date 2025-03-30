@@ -2,8 +2,11 @@ import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, Polyline, AttributionControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useState, useEffect } from 'react';
-import { Event } from '../types';
+import type { Event as BaseEvent } from '../types';
 import { useUser } from '@supabase/auth-helpers-react';
+import type { ReactNode } from 'react';
+
+type Event = BaseEvent;
 
 // Define multiple icons for different event types
 const icons = {
@@ -109,8 +112,8 @@ interface MapProps {
   onMapClick: (lat: number, lng: number) => void;
   onRemoveEvent: (id: string) => Promise<void>;
   isPendingEvent: boolean;
-  createPopupContent: (event: Event) => React.ReactNode;
-  children?: React.ReactNode;
+  createPopupContent: (event: Event) => ReactNode;
+  children?: ReactNode;
 }
 
 function LocationMarker() {
